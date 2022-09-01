@@ -33,12 +33,47 @@
     <br>
 
     <div>
-      <ol>
-      {% for website in websites %}
-        <li>{{ website }}</li>
-      {% endfor %}
-      </ol>
+      <div class="overflow-x-auto relative">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" class="py-3 px-6">
+                    Title
+                </th>
+              <th scope="col" class="py-3 px-6">
+                    URL
+                </th>
+              <th scope="col" class="py-3 px-6">
+                    Status
+                </th>
+              <th scope="col" class="py-3 px-6">
+                    Interval
+                </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for website in websites%}
+
+              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                <th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  {{ website.title }}
+                </th>
+                <td class="py-4 px-6">
+                  {{ website.url }}
+                </td>
+                <td class="py-4 px-6">
+                  {{ website.title }}
+                </td>
+                <td class="py-4 px-6">
+                  {{ website.interval }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
 {% endblock %}
