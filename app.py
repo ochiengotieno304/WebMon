@@ -1,51 +1,47 @@
-import atexit
 import requests
+import asyncio
 from datetime import datetime
 from flask import Flask, render_template, request, redirect
-from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
-
-
-class Config:
-    SCHEDULER_API_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///websites.db'
+from flask_migrate import Migrate
 
 
 app = Flask(__name__)
-app.config.from_object(Config())
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///websites.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # initialize db
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# create db
 
 
-# creta db
 class Websites(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     url = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.String(255))
     interval = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-# initialize scheduler
-scheduler = APScheduler()
-scheduler.init_app(app)
-scheduler.start()
+codes = []
 
 
-@scheduler.task('interval', id='do_job_1', seconds=30, misfire_grace_time=900)
-def job1():
-    test("https://google.com")
+def show_websites():
+    """Print all websites status code."""
+    asyncio.sleep(1)
+    with db.app.app_context():
+        for website in Websites.query.all():
+            codes.append(test(website.url))
 
-
-def blah():
-    with scheduler.app.app_context():
-        pass
+    return codes
 
 
 def test(url):
     contents = requests.get(url)
-    print(contents.status_code)
+    return contents.status_code
 
 
 @app.route('/')
@@ -56,14 +52,15 @@ def index():
         website_title = request.form.get('title')
         website_url = request.form.get('url')
         monitor_interval = request.form.get('interval')
+        website_status = test(website_url)
 
-        new_wwebsite = Websites(title=website_title,
-                                url=website_url,
-                                interval=monitor_interval)
-
+        new_website = Websites(title=website_title,
+                               url=website_url,
+                               interval=monitor_interval,
+                               status=website_status)
         # push to db
         try:
-            db.session.add(new_wwebsite)
+            db.session.add(new_website)
             db.session.commit()
             return redirect('/')
         except:
@@ -74,4 +71,8 @@ def index():
 
 
 if __name__ == '__main__':
+    # app.config.from_object(Config())
+
+    # db.init_app(app)
+
     app.run(debug=True)
